@@ -11,6 +11,10 @@ class CreateForm(forms.ModelForm):
         model = Poll
         exclude = ['password', 'poll_jsonstring']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({'class': 'transform-lowercase'})
+
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
@@ -18,9 +22,11 @@ class CreateForm(forms.ModelForm):
         if password1 != password2:
             self.add_error('password2', 'Password did not match')
 
+    def clean_name(self):
+        return self.cleaned_data['name'].lower()
+
     def save(self, commit=True):
         instance = super(CreateForm, self).save(commit=False)
-        instance.name = self.cleaned_data['name'].lower()
         instance.password = make_password(self.cleaned_data['password1'])
         if commit:
             instance.save()
